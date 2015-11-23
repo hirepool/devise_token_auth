@@ -35,6 +35,7 @@ module DeviseTokenAuth
         @resource.skip_confirmation!
       end
 
+      # REVIEW: Shouldn't this be 'devise_mapping' instead of :user?
       sign_in(:user, @resource, store: false, bypass: false)
 
       @resource.save!
@@ -218,13 +219,15 @@ module DeviseTokenAuth
     end
 
     def get_resource_from_auth_hash
-      # find or create user by provider and provider uid
-      @resource = resource_class.where({
-        uid:      auth_hash['uid'],
-        provider: auth_hash['provider']
-      }).first_or_initialize
+      @resource = resource_class.find_resource(
+        auth_hash['uid'],
+        auth_hash['provider']
+      )
 
-      if @resource.new_record?
+      if @resource.nil?
+        @resource          = resource_class.new
+        @resource.uid      = auth_hash['uid']      if @resource.has_attribute?(:uid)
+        @resource.provider = auth_hash['provider'] if @resource.has_attribute?(:provider)
         @oauth_registration = true
         set_random_password
       end

@@ -28,7 +28,13 @@ module DeviseTokenAuth
       end
 
       @email = get_case_insensitive_field_from_resource_params(:email)
-      @resource = find_resource(:uid, @email)
+
+
+      field = resource_class.authentication_field_for(resource_params.keys.map(&:to_sym))
+
+      @resource = resource_class.find_resource(resource_params[field], field) if field
+      @errors = nil
+      @error_status = 400
 
       if @resource
         yield @resource if block_given?
@@ -196,6 +202,9 @@ module DeviseTokenAuth
     end
 
     def render_not_found_error
+      # TODO: The resource_params could be a "username" field depending on
+      # what keys the resource uses for authentication. This translation
+      # should be updated to reflect this.
       render_error(404, I18n.t("devise_token_auth.passwords.user_not_found", email: @email))
     end
   end
