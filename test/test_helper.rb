@@ -75,3 +75,6 @@ class ActionController::TestCase
     @request.env['devise.mapping'] = Devise.mappings[:user]
   end
 end
+
+# Warnings are too verbose, easier to troubleshoot this way.
+$VERBOSE=nil
