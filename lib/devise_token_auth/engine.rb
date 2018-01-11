@@ -40,6 +40,7 @@ module DeviseTokenAuth
                                                :'client' => 'client',
                                                :'expiry' => 'expiry',
                                                :'uid' => 'uid',
+                                               :'provider' => 'provider',
                                                :'token-type' => 'token-type' }
   self.bypass_sign_in                       = true
 

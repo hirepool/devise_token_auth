@@ -314,7 +314,8 @@ module DeviseTokenAuth::Concerns::User
       DeviseTokenAuth.headers_names[:"token-type"]   => "Bearer",
       DeviseTokenAuth.headers_names[:"client"]       => client_id,
       DeviseTokenAuth.headers_names[:"expiry"]       => expiry.to_s,
-      DeviseTokenAuth.headers_names[:"uid"]          => "#{provider_id} #{provider}"
+      DeviseTokenAuth.headers_names[:"provider"]     => provider.to_s,
+      DeviseTokenAuth.headers_names[:"uid"]          => provider_id
     }
   end
 
