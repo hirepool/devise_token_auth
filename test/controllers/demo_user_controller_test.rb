@@ -412,6 +412,34 @@ class DemoUserControllerTest < ActionDispatch::IntegrationTest
           DeviseTokenAuth.headers_names[:'access-token'] = 'access-token'
         end
       end
+
+      describe 'maximum concurrent devices per user' do
+        before do
+          @max_devices = DeviseTokenAuth.max_number_of_devices
+        end
+
+        it 'should limit the maximum number of concurrent devices' do
+          # increment the number of devices until the maximum is exceeded
+          1.upto(@max_devices + 1).each do |n|
+            assert_equal [n, @max_devices].min, @resource.reload.tokens.keys.length
+            @resource.create_new_auth_token
+          end
+        end
+
+        it 'should drop the oldest token when the maximum number of devices is exceeded' do
+          # create the maximum number of tokens
+          1.upto(@max_devices).each { @resource.create_new_auth_token }
+
+          # get the oldest token
+          oldest_token, _ = @resource.reload.tokens \
+                              .min_by { |cid, v| v[:expiry] || v["expiry"] }
+
+          # create another token, thereby dropping the oldest token
+          @resource.create_new_auth_token
+
+          assert_not_includes @resource.reload.tokens.keys, oldest_token
+        end
+      end
     end
 
     describe 'bypass_sign_in' do
@@ -508,18 +536,6 @@ class DemoUserControllerTest < ActionDispatch::IntegrationTest
           it 'should not define current_mang' do
             refute_equal @resource, @controller.current_mang
           end
-
-          it 'should increase the number of tokens by a factor of 2 up to 11' do
-            @first_token = @resource.tokens.keys.first
-
-            DeviseTokenAuth.max_number_of_devices = 11
-            (1..10).each do |n|
-              assert_equal [11, 2 * n].min, @resource.reload.tokens.keys.length
-              get '/demo/members_only', params: {}, headers: nil
-            end
-
-            assert_not_includes @resource.reload.tokens.keys, @first_token
-          end
         end
 
         it 'should return success status' do
@@ -554,6 +570,8 @@ class DemoUserControllerTest < ActionDispatch::IntegrationTest
           @resource.save!
           login_as(@resource, scope: :user)
 
+          # send the auth_headers anyway, but they *should* be ignored and
+          #   warden *should* still authenticate correctly.
           get '/demo/members_only',
               params: {},
               headers: @auth_headers

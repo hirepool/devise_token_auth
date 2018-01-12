@@ -62,9 +62,6 @@ module DeviseTokenAuth::Concerns::SetUserByToken
       if devise_warden_user && devise_warden_user.tokens[@client_id].nil?
         @used_auth_by_token = false
         @resource = devise_warden_user
-        # REVIEW: Why are we bothering to create an auth token here? It won't
-        # get used anywhere by the looks of it...?
-        @resource.create_new_auth_token
       end
     end
 
