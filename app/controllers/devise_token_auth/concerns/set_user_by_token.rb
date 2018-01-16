@@ -53,6 +53,9 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     @token     ||= request.headers[access_token_name] || params[access_token_name]
     @client_id ||= request.headers[client_name] || params[client_name]
 
+    @provider = provider
+    @provider_id = uid
+
     # client_id isn't required, set to 'default' if absent
     @client_id ||= 'default'
 
