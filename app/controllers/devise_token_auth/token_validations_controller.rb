@@ -16,9 +16,17 @@ module DeviseTokenAuth
     protected
 
     def render_validate_token_success
+      data = @resource.token_validation_response
+
+      uid_name = DeviseTokenAuth.headers_names[:'uid']
+      provider_name = DeviseTokenAuth.headers_names[:'provider']
+      data['uid'] = request.headers[uid_name] || params[uid_name]
+      data['provider'] = request.headers[provider_name] || params[provider_name]
+      data = resource_data(resource_json: data)
+
       render json: {
         success: true,
-        data: resource_data(resource_json: @resource.token_validation_response)
+        data: data
       }
     end
 
