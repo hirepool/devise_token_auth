@@ -67,7 +67,7 @@ Please read the [issue reporting guidelines](#issue-reporting) before posting is
   * [Using Multiple User Classes](#using-multiple-models)
   * [Excluding Modules](#excluding-modules)
   * [Custom Controller Overrides](#custom-controller-overrides)
-  * [Passing blocks to Controllers](#passing-blocks-controllers)
+  * [Passing blocks to Controllers](#passing-blocks-to-controllers)
   * [Email Template Overrides](#email-template-overrides)
   * [Testing](#testing)
 * [Issue Reporting Guidelines](#issue-reporting)
@@ -880,10 +880,12 @@ When posting issues, please include the information mentioned in the [ISSUE_TEMP
 
 Yes! But you will need to enable the support of separate routes for standard Devise. So do something like this:
 
+_*NOTE: This feature is highly experimental!*_
+
 #### config/initializers/devise_token_auth.rb
 ~~~ruby
 DeviseTokenAuth.setup do |config|
-  # config.enable_standard_devise_support = false
+  config.enable_standard_devise_support = true # (default is false)
 end
 ~~~
 
