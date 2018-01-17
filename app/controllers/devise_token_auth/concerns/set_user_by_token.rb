@@ -48,13 +48,10 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     client_name = DeviseTokenAuth.headers_names[:'client']
 
     # parse header for values necessary for authentication
-    uid        = request.headers[uid_name] || params[uid_name]
-    provider   = request.headers[provider_name] || params[provider_name]
+    @provider_id = request.headers[uid_name] || params[uid_name]
+    @provider    = request.headers[provider_name] || params[provider_name]
     @token     ||= request.headers[access_token_name] || params[access_token_name]
     @client_id ||= request.headers[client_name] || params[client_name]
-
-    @provider = provider
-    @provider_id = uid
 
     # client_id isn't required, set to 'default' if absent
     @client_id ||= 'default'
@@ -82,7 +79,7 @@ module DeviseTokenAuth::Concerns::SetUserByToken
     # NOTE: By searching for the user by an identifier instead of by token, we
     # mitigate timing attacks
     #
-    resource = rc.find_resource(uid, provider)
+    resource = rc.find_resource(@provider_id, @provider)
 
     if resource && resource.valid_token?(@token, @client_id)
       # sign_in with bypass: true will be deprecated in the next version of Devise
