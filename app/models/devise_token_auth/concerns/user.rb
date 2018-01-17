@@ -334,8 +334,9 @@ module DeviseTokenAuth::Concerns::User
   end
 
   def build_auth_url(base_url, args)
-    args[:uid]    = self.uid
-    args[:expiry] = self.tokens[args[:client_id]]['expiry']
+    args[:uid]      = self.uid
+    args[:provider] = self.provider
+    args[:expiry]   = self.tokens[args[:client_id]]['expiry']
 
     DeviseTokenAuth::Url.generate(base_url, args)
   end
