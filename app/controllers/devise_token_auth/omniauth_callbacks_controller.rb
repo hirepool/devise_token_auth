@@ -228,7 +228,9 @@ module DeviseTokenAuth
     end
 
     def get_resource_from_auth_hash
-      @resource = resource_class.find_resource(
+      # TODO: investigate the possibility that memoizing this assignment
+      #       might break something elsewhere.
+      @resource ||= resource_class.find_resource(
         auth_hash['uid'],
         auth_hash['provider']
       )
