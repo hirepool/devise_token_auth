@@ -33,8 +33,7 @@ module DeviseTokenAuth
         @resource.skip_confirmation!
       end
 
-      # REVIEW: Shouldn't this be 'devise_mapping' instead of :user?
-      sign_in(:user, @resource, store: false, bypass: false)
+      sign_in(devise_mapping.name, @resource, store: false, bypass: false)
 
       @resource.save!
 

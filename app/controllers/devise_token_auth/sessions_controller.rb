@@ -32,8 +32,7 @@ module DeviseTokenAuth
         @provider_id = @resource.email
         @resource.save
 
-        # REVIEW: Shouldn't this be a "mapping" option, rather than a :user?
-        sign_in(:user, @resource, store: false, bypass: false)
+        sign_in(devise_mapping.name, @resource, store: false, bypass: false)
 
         yield @resource if block_given?
 
@@ -47,15 +46,15 @@ module DeviseTokenAuth
 
     def destroy
       # remove auth instance variables so that after_action does not run
-      user = remove_instance_variable(:@resource) if @resource
+      resource = remove_instance_variable(:@resource) if @resource
       client_id = remove_instance_variable(:@client_id) if @client_id
       remove_instance_variable(:@token) if @token
 
-      if user && client_id && user.tokens[client_id]
-        user.tokens.delete(client_id)
-        user.save!
+      if resource && client_id && resource.tokens[client_id]
+        resource.tokens.delete(client_id)
+        resource.save!
 
-        yield user if block_given?
+        yield resource if block_given?
 
         render_destroy_success
       else
