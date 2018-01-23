@@ -622,6 +622,7 @@ class DemoUserControllerTest < ActionDispatch::IntegrationTest
         end
 
         it "should not return the token user's uid in the auth header" do
+          skip "Why set any token_auth headers when authenticating via existing warden/devise?"
           refute_equal @resp_uid, @auth_headers['uid']
         end
 
