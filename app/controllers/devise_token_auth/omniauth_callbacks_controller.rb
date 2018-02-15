@@ -154,12 +154,18 @@ module DeviseTokenAuth
     end
 
     def create_auth_params
+      # These need to be instance variables so that we set the auth header info
+      # correctly
+      @provider_id = auth_hash['uid']
+      @provider = auth_hash['provider']
+
       @auth_params = {
-        auth_token:     @token,
-        client_id: @client_id,
-        uid:       @resource.uid,
-        expiry:    @expiry,
-        config:    @config
+        client_id:  @client_id,
+        auth_token: @token,
+        uid:        @provider_id,
+        provider:   @provider,
+        expiry:     @expiry,
+        config:     @config
       }
       @auth_params.merge!(oauth_registration: true) if @oauth_registration
       @auth_params
