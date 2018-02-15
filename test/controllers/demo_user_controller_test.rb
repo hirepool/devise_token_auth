@@ -415,20 +415,26 @@ class DemoUserControllerTest < ActionDispatch::IntegrationTest
 
       describe 'maximum concurrent devices per user' do
         before do
-          @max_devices = DeviseTokenAuth.max_number_of_devices
+          # Set the max_number_of_devices to a lower number
+          #  to expedite tests! (Default is 10)
+          DeviseTokenAuth.max_number_of_devices = 5
         end
 
         it 'should limit the maximum number of concurrent devices' do
           # increment the number of devices until the maximum is exceeded
-          1.upto(@max_devices + 1).each do |n|
-            assert_equal [n, @max_devices].min, @resource.reload.tokens.keys.length
+          1.upto(DeviseTokenAuth.max_number_of_devices + 1).each do |n|
+            assert_equal @resource.reload.tokens.length,
+                         [n, DeviseTokenAuth.max_number_of_devices].min
+
             @resource.create_new_auth_token
           end
         end
 
         it 'should drop the oldest token when the maximum number of devices is exceeded' do
           # create the maximum number of tokens
-          1.upto(@max_devices).each { @resource.create_new_auth_token }
+          1.upto(DeviseTokenAuth.max_number_of_devices).each do
+            @resource.create_new_auth_token
+          end
 
           # get the oldest token
           oldest_token, _ = @resource.reload.tokens \
