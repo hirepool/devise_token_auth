@@ -376,17 +376,17 @@ module DeviseTokenAuth::Concerns::User
 
   def remove_tokens_after_password_reset
     # Only remove older tokens if necessary
-    return unless \
-      DeviseTokenAuth.remove_tokens_after_password_reset &&
-      encrypted_password_changed? && tokens.present? && tokens.many?
+    return unless DeviseTokenAuth.remove_tokens_after_password_reset &&
+                  encrypted_password_changed? && tokens.present? && tokens.many?
 
     # Keep only the newest client_id/token, which was set after the password
     #   was reset.
     #
     # Using Enumerable#max_by on a Hash will typecast it into an associative
-    #   Array (i.e. an Array of key-value Array pairs), so convert it back into
+    #   Array and return a single key-value Array pair, so convert it back into
     #   a Hash.
-    self.tokens = tokens.max_by { |_cid, v| v[:expiry] || v["expiry"] }.to_h
+    client_id, token_data = tokens.max_by { |_cid, v| v[:expiry] || v["expiry"] }
+    self.tokens = {client_id => token_data}
   end
 
 end
