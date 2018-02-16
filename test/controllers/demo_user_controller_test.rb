@@ -319,19 +319,19 @@ class DemoUserControllerTest < ActionDispatch::IntegrationTest
         before do
           DeviseTokenAuth.remove_tokens_after_password_reset = true
 
-          # adding one more token to simulate another logged in device
+          # Existing device is older
           @old_auth_headers = @auth_headers
-          @auth_headers = @resource.create_new_auth_token
-          age_token(@resource, @client_id)
-          assert @resource.tokens.count > 1
+          age_token(@resource, @old_auth_headers['client'])
 
-          # password changed from new device
-          @resource.update_attributes(password: 'newsecret123',
-                                      password_confirmation: 'newsecret123')
+          # Add another token to simulate another logged in device
+          @new_auth_headers = @resource.create_new_auth_token
+          assert @resource.tokens.many?
 
-          get '/demo/members_only',
-              params: {},
-              headers: @auth_headers
+          # Change password from new device
+          @resource.update_attributes(
+            password: 'newsecret123',
+            password_confirmation: 'newsecret123'
+          )
         end
 
         after do
@@ -339,19 +339,19 @@ class DemoUserControllerTest < ActionDispatch::IntegrationTest
         end
 
         it 'should have only one token' do
+          get '/demo/members_only', params: {}, headers: @new_auth_headers
           assert_equal 1, @resource.tokens.count
         end
 
         it 'new request should be successful' do
-          assert 200, response.status
+          get '/demo/members_only', params: {}, headers: @new_auth_headers
+          assert_equal 200, response.status
         end
 
         describe 'another device should not be able to login' do
           it 'should return forbidden status' do
-            get '/demo/members_only',
-                params: {},
-                headers: @old_auth_headers
-            assert 401, response.status
+            get '/demo/members_only', params: {}, headers: @old_auth_headers
+            assert_equal 401, response.status
           end
         end
       end

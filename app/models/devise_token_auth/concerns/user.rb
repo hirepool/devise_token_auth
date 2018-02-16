@@ -385,7 +385,10 @@ module DeviseTokenAuth::Concerns::User
     # Using Enumerable#max_by on a Hash will typecast it into an associative
     #   Array and return a single key-value Array pair, so convert it back into
     #   a Hash.
-    client_id, token_data = tokens.max_by { |_cid, v| v[:expiry] || v["expiry"] }
+    client_id, token_data = tokens.max_by do |_cid, v|
+      Time.zone.parse(v[:updated_at] || v['updated_at'])
+    end
+
     self.tokens = {client_id => token_data}
   end
 
