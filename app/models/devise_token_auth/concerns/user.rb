@@ -274,8 +274,6 @@ module DeviseTokenAuth::Concerns::User
   end
 
   def build_auth_header(token, client_id='default', provider_id, provider)
-    # client_id ||= 'default'
-
     # If we've not been given a specific provider, intuit it. This may occur
     # when logging in through standard devise (for example). See the check
     # for DeviseTokenAuth.enable_standard_devise_support in:
