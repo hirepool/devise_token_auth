@@ -24,7 +24,7 @@ ActiveSupport::TestCase.fixture_path = File.expand_path('../fixtures', __FILE__)
 ActionDispatch::IntegrationTest.fixture_path = File.expand_path('../fixtures', __FILE__)
 
 # I hate the default reporter. Use ProgressReporter instead.
-Minitest::Reporters.use! Minitest::Reporters::ProgressReporter.new
+# Minitest::Reporters.use! Minitest::Reporters::ProgressReporter.new
 
 class ActionDispatch::IntegrationTest
   def follow_all_redirects!
