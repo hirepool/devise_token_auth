@@ -16,12 +16,7 @@ module DeviseTokenAuth
 
         yield @resource if block_given?
 
-        redirect_header_options = {account_confirmation_success: true}
-        redirect_headers = build_redirect_headers(token,
-                                                  client_id,
-                                                  redirect_header_options)
-        redirect_to(@resource.build_auth_url(confirm_success_url,
-                                             redirect_headers))
+        redirect_to @resource.build_auth_url(confirm_success_url, redirect_headers(client_id, token))
       else
         raise ActionController::RoutingError.new('Not Found')
       end
@@ -31,6 +26,10 @@ module DeviseTokenAuth
 
     def confirm_success_url
       params[:redirect_url] || DeviseTokenAuth.default_confirm_success_url
+    end
+
+    def redirect_headers(client_id, token)
+      build_redirect_headers token, client_id, {account_confirmation_success: true}
     end
   end
 end

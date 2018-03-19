@@ -70,12 +70,7 @@ module DeviseTokenAuth
 
         yield @resource if block_given?
 
-        redirect_header_options = {reset_password: true}
-        redirect_headers = build_redirect_headers(token,
-                                                  client_id,
-                                                  redirect_header_options)
-        redirect_to(@resource.build_auth_url(params[:redirect_url],
-                                             redirect_headers))
+        redirect_to @resource.build_auth_url(params[:redirect_url], redirect_headers(client_id, token))
       else
         render_edit_error
       end
@@ -112,6 +107,10 @@ module DeviseTokenAuth
 
     def password_reset_url
       params[:redirect_url] || DeviseTokenAuth.default_password_reset_url
+    end
+
+    def redirect_headers(client_id, token)
+      build_redirect_headers token, client_id, {reset_password: true}
     end
 
     def resource_update_method

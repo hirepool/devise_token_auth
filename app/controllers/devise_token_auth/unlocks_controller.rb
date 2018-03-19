@@ -39,18 +39,20 @@ module DeviseTokenAuth
         @resource.save!
         yield @resource if block_given?
 
-        redirect_header_options = {unlock: true}
-        redirect_headers = build_redirect_headers(token,
-                                                  client_id,
-                                                  redirect_header_options)
-        redirect_to(@resource.build_auth_url(after_unlock_path_for(@resource),
-                                             redirect_headers))
+        redirect_to @resource.build_auth_url(after_unlock_path_for(@resource), redirect_headers(client_id, token))
       else
         render_show_error
       end
     end
 
+    protected
+
+    def redirect_headers(client_id, token)
+      build_redirect_headers token, client_id, {unlock: true}
+    end
+
     private
+
     def after_unlock_path_for(resource)
       #TODO: This should probably be a configuration option at the very least.
       '/'
