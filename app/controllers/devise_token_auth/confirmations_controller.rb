@@ -20,11 +20,17 @@ module DeviseTokenAuth
         redirect_headers = build_redirect_headers(token,
                                                   client_id,
                                                   redirect_header_options)
-        redirect_to(@resource.build_auth_url(params[:redirect_url],
+        redirect_to(@resource.build_auth_url(confirm_success_url,
                                              redirect_headers))
       else
         raise ActionController::RoutingError.new('Not Found')
       end
+    end
+
+    protected
+
+    def confirm_success_url
+      params[:redirect_url] || DeviseTokenAuth.default_confirm_success_url
     end
   end
 end

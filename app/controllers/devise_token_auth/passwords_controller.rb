@@ -10,19 +10,13 @@ module DeviseTokenAuth
         return render_create_error_missing_email
       end
 
-      # give redirect value from params priority
-      @redirect_url = params[:redirect_url]
-
-      # fall back to default value if provided
-      @redirect_url ||= DeviseTokenAuth.default_password_reset_url
-
-      unless @redirect_url
+      unless password_reset_url
         return render_create_error_missing_redirect_url
       end
 
-      # if whitelist is set, validate redirect_url against whitelist
+      # if whitelist is set, validate password_reset_url against whitelist
       if DeviseTokenAuth.redirect_whitelist
-        unless DeviseTokenAuth::Url.whitelisted?(@redirect_url)
+        unless DeviseTokenAuth::Url.whitelisted?(password_reset_url)
           return render_create_error_not_allowed_redirect_url
         end
       end
@@ -40,7 +34,7 @@ module DeviseTokenAuth
         @resource.send_reset_password_instructions({
           email: @email,
           provider: 'email',
-          redirect_url: @redirect_url,
+          redirect_url: password_reset_url,
           client_config: params[:config_name]
         })
 
@@ -63,10 +57,14 @@ module DeviseTokenAuth
         client_id, token = @resource.create_token
 
         # ensure that user is confirmed
-        @resource.skip_confirmation! if confirmable_enabled? && !@resource.confirmed_at
+        if confirmable_enabled? && !@resource.confirmed?
+          @resource.skip_confirmation!
+        end
 
         # allow user to change password once without current_password
-        @resource.allow_password_change = true if recoverable_enabled?
+        if recoverable_enabled?
+          @resource.allow_password_change = true
+        end
 
         @resource.save!
 
@@ -112,6 +110,10 @@ module DeviseTokenAuth
 
     protected
 
+    def password_reset_url
+      params[:redirect_url] || DeviseTokenAuth.default_password_reset_url
+    end
+
     def resource_update_method
       allow_password_change = recoverable_enabled? && @resource.allow_password_change == true
       if DeviseTokenAuth.check_current_password_before_update == false || allow_password_change
@@ -134,7 +136,7 @@ module DeviseTokenAuth
         status: 'error',
         data:   resource_data
       }
-      message = I18n.t("devise_token_auth.passwords.not_allowed_redirect_url", redirect_url: @redirect_url)
+      message = I18n.t("devise_token_auth.passwords.not_allowed_redirect_url", redirect_url: password_reset_url)
       render_error(422, message, response)
     end
 
