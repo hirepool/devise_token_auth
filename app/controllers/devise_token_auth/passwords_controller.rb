@@ -26,11 +26,13 @@ module DeviseTokenAuth
       field = resource_class.authentication_field_for(resource_params.keys.map(&:to_sym))
 
       @resource = resource_class.find_resource(resource_params[field], field) if field
-      @errors = nil
-      @error_status = 400
+      # TODO: remove commented code in a !fixup commit
+      # @errors = nil
+      # @error_status = 400
 
       if @resource
         yield @resource if block_given?
+
         @resource.send_reset_password_instructions({
           email: @email,
           provider: 'email',
@@ -39,7 +41,7 @@ module DeviseTokenAuth
         })
 
         if @resource.errors.empty?
-          return render_create_success
+          render_create_success
         else
           render_create_error @resource.errors
         end

@@ -126,7 +126,6 @@ module DeviseTokenAuth
     # must be destroyed immediatly after it is accessed by omniauth_success
     def auth_hash
       @_auth_hash ||= session.delete('dta.omniauth.auth')
-      @_auth_hash
     end
 
     # ensure that this controller responds to :devise_controller? conditionals.
@@ -166,9 +165,9 @@ module DeviseTokenAuth
         provider:   @provider,
         expiry:     @expiry,
         config:     @config
-      }
-      @auth_params.merge!(oauth_registration: true) if @oauth_registration
-      @auth_params
+      }.tap do |auth|
+        auth.merge!(oauth_registration: true) if @oauth_registration
+      end
     end
 
     def set_token_on_resource
@@ -177,14 +176,11 @@ module DeviseTokenAuth
     end
 
     def render_data(message, data)
-      @data = data.merge({
-        message: message
-      })
-      render :layout => nil, :template => "devise_token_auth/omniauth_external_window"
+      @data = data.merge(message: message)
+      render layout: nil, template: 'devise_token_auth/omniauth_external_window'
     end
 
     def render_data_or_redirect(message, data, user_data = {})
-
       # We handle inAppBrowser and newWindow the same, but it is nice
       # to support values in case people need custom implementations for each case
       # (For example, nbrustein does not allow new users to be created if logging in with

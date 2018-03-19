@@ -49,7 +49,7 @@ module DeviseTokenAuth
             })
 
           else
-            # email auth has been bypassed, authenticate user
+            # email confirmation has been bypassed, authenticate user
             @client_id, @token = @resource.create_token
 
             @resource.save!
