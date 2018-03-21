@@ -2,14 +2,13 @@ module DeviseTokenAuth
   class ConfirmationsController < DeviseTokenAuth::ApplicationController
     def show
       @resource = resource_class.confirm_by_token(params[:confirmation_token])
+      yield @resource if block_given?
 
       if @resource && @resource.id
         client_id, token = @resource.create_token expiry: expiry
 
         sign_in(@resource)
         @resource.save!
-
-        yield @resource if block_given?
 
         redirect_to @resource.build_auth_url(confirm_success_url, redirect_headers(client_id, token))
       else
