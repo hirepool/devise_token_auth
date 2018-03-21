@@ -4,11 +4,6 @@ module DeviseTokenAuth
       @resource = resource_class.confirm_by_token(params[:confirmation_token])
 
       if @resource && @resource.id
-        expiry = nil
-        if defined?(@resource.sign_in_count) && @resource.sign_in_count > 0
-          expiry = (Time.now + 1.second).to_i
-        end
-
         client_id, token = @resource.create_token expiry: expiry
 
         sign_in(@resource)
@@ -23,6 +18,14 @@ module DeviseTokenAuth
     end
 
     protected
+
+    # TODO: move this to the DeviseTokenAuth::Concerns::User?
+    # This is entirely dependent on the internals of the @resource, not the request...
+    def expiry
+      if @resource.has_attribute?(:sign_in_count) && @resource.sign_in_count > 0
+        (Time.now + 1.second).to_i
+      end
+    end
 
     def confirm_success_url
       params[:redirect_url] || DeviseTokenAuth.default_confirm_success_url
