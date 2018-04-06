@@ -6,6 +6,8 @@ confirmed_email_user:
   nickname:           'stimpy'
   provider:           'email'
   confirmed_at:       '<%= timestamp %>'
+  confirmation_token: <%= User.new.send(:password_digest, 'token123') %>
+  confirmation_sent_at: '<%= timestamp %>'
   created_at:         '<%= timestamp %>'
   updated_at:         '<%= timestamp %>'
   encrypted_password: <%= User.new.send(:password_digest, 'secret123') %>
@@ -17,6 +19,8 @@ second_confirmed_email_user:
   nickname:           'stimpy2'
   provider:           'email'
   confirmed_at:       '<%= timestamp %>'
+  confirmation_token: <%= User.new.send(:password_digest, 'token123') %>
+  confirmation_sent_at: '<%= timestamp %>'
   created_at:         '<%= timestamp %>'
   updated_at:         '<%= timestamp %>'
   encrypted_password: <%= User.new.send(:password_digest, 'secret123') %>
@@ -28,7 +32,8 @@ duplicate_email_facebook_user:
   provider:           'facebook'
   created_at:         '<%= timestamp %>'
   updated_at:         '<%= timestamp %>'
-  confirmed_at:       '<%= timestamp %>'
+  # confirmed_at:       '<%= timestamp %>'
+  confirmation_token: <%= User.new.send(:password_digest, 'token123') %>
   encrypted_password: <%= User.new.send(:password_digest, 'secret123') %>
 
 <% @unconfirmed_email = Faker::Internet.email %>
@@ -39,6 +44,7 @@ unconfirmed_email_user:
   created_at:         '<%= timestamp %>'
   updated_at:         '<%= timestamp %>'
   encrypted_password: <%= User.new.send(:password_digest, 'secret123') %>
+  confirmation_token: <%= User.new.send(:password_digest, 'token123') %>
   confirmation_sent_at: '<%= timestamp %>'
 
 <% @recent_unconfirmed_email = Faker::Internet.email %>
@@ -50,4 +56,5 @@ recent_unconfirmed_email_user:
   created_at:         '<%= timestamp %>'
   updated_at:         '<%= timestamp %>'
   encrypted_password: <%= User.new.send(:password_digest, 'secret123') %>
+  confirmation_token: <%= User.new.send(:password_digest, 'token123') %>
   confirmation_sent_at: '<%= recent_timestamp %>'

@@ -7,121 +7,141 @@ require 'test_helper'
 #  was the appropriate message delivered in the json payload?
 
 class DeviseTokenAuth::ConfirmationsControllerTest < ActionController::TestCase
+  extend Minitest::Spec::DSL
+
   describe DeviseTokenAuth::ConfirmationsController do
-    def token_and_client_config_from(body)
-      token         = body.match(/confirmation_token=([^&]*)&/)[1]
-      client_config = body.match(/config=([^&]*)&/)[1]
-      [token, client_config]
-    end
+    describe '#show' do
+      let(:success_url) { Faker::Internet.url }
+      let(:user) { users(:unconfirmed_email_user) }
 
-    describe 'Confirmation' do
-      before do
-        @redirect_url = Faker::Internet.url
-        @new_user = users(:unconfirmed_email_user)
-        @new_user.send_confirmation_instructions(redirect_url: @redirect_url)
-        mail = ActionMailer::Base.deliveries.last
-        @token, @client_config = token_and_client_config_from(mail.body)
-      end
-
-      test 'should generate raw token' do
-        assert @token
-      end
-
-      test "should include config name as 'default' in confirmation link" do
-        assert_equal 'default', @client_config
-      end
-
-      test 'should store token hash in user' do
-        assert @new_user.confirmation_token
+      let(:valid_params) do
+        {
+          config: 'default',
+          confirmation_token: user.confirmation_token,
+          redirect_url: success_url
+        }
       end
 
       describe 'success' do
-        before do
-          get :show,
-              params: { confirmation_token: @token,
-                        redirect_url: @redirect_url },
-              xhr: true
-          @resource = assigns(:resource)
-        end
+        subject { get :show, params: valid_params, xhr: true }
 
-        test 'user should now be confirmed' do
-          assert @resource.confirmed?
-        end
-
-        test 'should redirect to success url' do
-          assert_redirected_to(/^#{@redirect_url}/)
-        end
-
-        test 'the sign_in_count should be 1' do
-          assert @resource.sign_in_count == 1
-        end
-        test 'User shoud have the signed in info filled' do
-          assert @resource.current_sign_in_at?
-        end
-        test 'User shoud have the Last checkin filled' do
-          assert @resource.last_sign_in_at?
-        end
-        
-        test 'user already confirmed' do
-          assert @resource.sign_in_count > 0 do
-            assert expiry == (Time.now + Time.now + 1.second).to_i
+        it 'should confirm the user with the given token' do
+          assert_changes -> { user.confirmed_at }, from: nil do
+            subject
+            user.reload
           end
+        end
+
+        it 'should create a new auth_token for the user with the given token' do
+          assert_changes -> { user.tokens } do
+            subject
+            user.reload
+          end
+        end
+
+        it 'should sign the user in' do
+          subject
+          assert warden.authenticated?(:user)
+        end
+
+        it 'should redirect to success url' do
+          subject
+          assert_redirected_to(/^#{success_url}/)
         end
       end
 
       describe 'failure' do
-        test 'user should not be confirmed' do
-          assert_raises(ActionController::RoutingError) do
-            get :show, params: { confirmation_token: 'bogus' }
+        describe 'for an already confirmed user resource' do
+          let(:user) { users(:confirmed_email_user) }
+
+          subject { get :show, params: valid_params, xhr: true }
+
+          it 'should not update the user' do
+            assert_no_changes -> { user } do
+              subject
+              user.reload
+            end
           end
-          @resource = assigns(:resource)
-          refute @resource.confirmed?
-        end
-      end
-    end
 
-    # test with non-standard user class
-    describe 'Alternate user model' do
-      setup do
-        @request.env['devise.mapping'] = Devise.mappings[:mang]
-      end
+          it 'should respond with 422 "Unprocessable Entity"' do
+            subject
+            assert_response :unprocessable_entity
+          end
 
-      teardown do
-        @request.env['devise.mapping'] = Devise.mappings[:user]
-      end
+          it 'should have "success: false" in the json response' do
+            subject
+            assert_equal false, json_response['success']
+          end
 
-      before do
-        @config_name = 'altUser'
-        @new_user    = mangs(:unconfirmed_email_user)
-
-        @new_user.send_confirmation_instructions(client_config: @config_name)
-
-        mail = ActionMailer::Base.deliveries.last
-        @token, @client_config = token_and_client_config_from(mail.body)
-      end
-
-      test 'should generate raw token' do
-        assert @token
-      end
-
-      test 'should include config name in confirmation link' do
-        assert_equal @config_name, @client_config
-      end
-
-      test 'should store token hash in user' do
-        assert @new_user.confirmation_token
-      end
-
-      describe 'success' do
-        before do
-          @redirect_url = Faker::Internet.url
-          get :show, params: { confirmation_token: @token,
-                               redirect_url: @redirect_url }
-          @resource = assigns(:resource)
+          it 'should include error "email already confirmed" in the json response' do
+            subject
+            assert_includes json_response['errors']['email'], 'was already confirmed, please try signing in'
+          end
         end
 
-        test 'user should now be confirmed' do
-          assert @resource.confirmed?
+        describe 'for a not-found user' do
+          let(:missing_token_params) do
+            valid_params.merge(confirmation_token: 'missing_token')
+          end
+
+          subject { get :show, params: missing_token_params, xhr: true }
+
+          it 'should respond with 422 "Unprocessable Entity"' do
+            subject
+            assert_response :unprocessable_entity
+          end
+
+          it 'should have "success: false" in the json response' do
+            subject
+            assert_equal false, json_response['success']
+          end
+
+          it 'should include error "confirmation token is invalid" in the json response' do
+            subject
+            assert_includes json_response['errors']['confirmation_token'], 'is invalid'
+          end
+        end
+      end
+
+      # test with non-standard user class
+      describe 'Alternate user model' do
+        before { @request.env['devise.mapping'] = Devise.mappings[:mang] }
+        after  { @request.env['devise.mapping'] = Devise.mappings[:user] }
+
+        let(:configName) { 'altUser' }
+        let(:manager) { mangs(:unconfirmed_email_user) }
+
+        let(:valid_alt_params) do
+          valid_params.merge(
+            config: configName,
+            confirmation_token: manager.confirmation_token
+          )
+        end
+
+        subject { get :show, params: valid_alt_params, xhr: true }
+
+        it 'should confirm the manager with the given token' do
+          assert_changes -> { manager.confirmed_at }, from: nil do
+            subject
+            manager.reload
+          end
+        end
+
+        it 'should create a new auth_token for the manager with the given token' do
+          assert_changes -> { manager.tokens } do
+            subject
+            manager.reload
+          end
+        end
+
+        it 'should sign the manger in' do
+          subject
+          assert warden.authenticated?(:mang)
+        end
+
+        it 'should redirect to success url' do
+          subject
+          assert_redirected_to(/^#{success_url}/)
         end
       end
     end

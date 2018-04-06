@@ -74,6 +74,10 @@ class ActionController::TestCase
     @routes = Dummy::Application.routes
     @request.env['devise.mapping'] = Devise.mappings[:user]
   end
+
+  def json_response
+    JSON.parse(response.body)
+  end
 end
 
 # Warnings are too verbose, easier to troubleshoot this way.

@@ -1,13 +1,15 @@
 <% timestamp = DateTime.parse(2.weeks.ago.to_s).to_time.strftime("%F %T") %>
 <% @email = Faker::Internet.email %>
 confirmed_email_user:
-  uid:                 "<%= @email %>"
-  email:               "<%= @email %>"
-  provider:            'email'
-  confirmed_at:        '<%= timestamp %>'
-  created_at:          '<%= timestamp %>'
-  updated_at:          '<%= timestamp %>'
-  encrypted_password:  <%= Mang.new.send(:password_digest, 'secret123') %>
+  uid:                  "<%= @email %>"
+  email:                "<%= @email %>"
+  provider:             'email'
+  confirmed_at:         '<%= timestamp %>'
+  confirmation_token:   <%= User.new.send(:password_digest, 'token123') %>
+  confirmation_sent_at: '<%= timestamp %>'
+  created_at:           '<%= timestamp %>'
+  updated_at:           '<%= timestamp %>'
+  encrypted_password:   <%= Mang.new.send(:password_digest, 'secret123') %>
 
 <% @fb_email = Faker::Internet.email %>
 duplicate_email_facebook_user:
@@ -16,14 +18,16 @@ duplicate_email_facebook_user:
   provider:            'facebook'
   created_at:          '<%= timestamp %>'
   updated_at:          '<%= timestamp %>'
-  confirmed_at:        '<%= timestamp %>'
+  # confirmed_at:        '<%= timestamp %>'
   encrypted_password:  <%= Mang.new.send(:password_digest, 'secret123') %>
 
 <% @unconfirmed_email = Faker::Internet.email %>
 unconfirmed_email_user:
-  uid:                 "<%= @unconfirmed_email %>"
-  email:               "<%= @unconfirmed_email %>"
-  provider:            'email'
-  created_at:          '<%= timestamp %>'
-  updated_at:          '<%= timestamp %>'
-  encrypted_password:  <%= Mang.new.send(:password_digest, 'secret123') %>
+  uid:                  "<%= @unconfirmed_email %>"
+  email:                "<%= @unconfirmed_email %>"
+  provider:             'email'
+  created_at:           '<%= timestamp %>'
+  updated_at:           '<%= timestamp %>'
+  encrypted_password:   <%= Mang.new.send(:password_digest, 'secret123') %>
+  confirmation_token:   <%= User.new.send(:password_digest, 'token123') %>
+  confirmation_sent_at: '<%= timestamp %>'
