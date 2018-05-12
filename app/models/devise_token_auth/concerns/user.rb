@@ -330,8 +330,8 @@ module DeviseTokenAuth::Concerns::User
     return update_auth_header(token, client_id, provider_id, provider)\
   end
 
-  def confirmed?
-    devise_modules.exclude?(:confirmable) || super
+  def confirmation_required?
+    devise_modules.include?(:confirmable) && super
   end
 
   def token_validation_response
