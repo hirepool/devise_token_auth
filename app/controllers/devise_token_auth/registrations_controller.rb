@@ -6,8 +6,8 @@ module DeviseTokenAuth
     skip_after_action :update_auth_header, only: [:create, :destroy]
 
     def create
-      @resource            = resource_class.new(sign_up_params.except(:confirm_success_url))
-      @resource.provider   = provider if @resource.has_attribute?(:provider)
+      @resource ||= resource_class.new(sign_up_params.except(:confirm_success_url))
+      @resource.provider = provider if @resource.has_attribute?(:provider)
 
       # honor devise configuration for case_insensitive_keys
       if resource_class.case_insensitive_keys.include?(:email)
